@@ -2,7 +2,7 @@
  *  파일을 고쳐 올릴 때는 아래 VERSION 을 올릴 것 (그래야 휴대폰이 새 파일을 받음).
  *  지도 타일(OpenStreetMap)은 여기서 저장하지 않고 브라우저 캐시에 맡긴다 (OSM 사용 조건).
  */
-var VERSION = 'qsm-0.1.0f';
+var VERSION = 'qsm-0.1.1';
 var FILES = [
   './', 'index.html', 'manifest.webmanifest', 'app.css',
   'i18n.js', 'protocol.js', 'store.js', 'ble.js', 'geo.js', 'demo.js', 'sound.js',

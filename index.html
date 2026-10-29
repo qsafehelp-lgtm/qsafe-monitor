@@ -55,7 +55,7 @@
         <div class="tile"><span data-i="sessDose"></span><b id="tSess">-</b></div>
         <div class="tile"><span data-i="devDose"></span><b id="tDev">-</b></div>
         <div class="tile"><span data-i="temp"></span><b id="tTemp">-</b></div>
-        <div class="tile"><span>GPS</span><b id="tGps">—</b></div>
+        <button class="tile tilebtn" id="gpsTile"><span>GPS</span><b id="tGps">—</b></button>
       </div>
       <div class="card">
         <div class="cardhead"><span data-i="last2m"></span><span id="sparkMax" class="num"></span></div>
@@ -144,6 +144,7 @@
         <div class="row"><label for="sAutoRec" data-i="autoRec"></label><input type="checkbox" class="sw" id="sAutoRec"></div>
         <div class="row"><label for="sWake" data-i="wake"></label><input type="checkbox" class="sw" id="sWake"></div>
         <div class="row"><label for="sUseGps" data-i="useGps"></label><input type="checkbox" class="sw" id="sUseGps"></div>
+        <div class="row"><span data-i="gpsStateL"></span><span style="display:flex;gap:10px;align-items:center"><span class="ro" id="gpsStateRo"></span><button class="linkbtn" id="btnGpsHelp" data-i="gpsMore"></button></span></div>
         <div class="row"><label for="sGpsAcc" data-i="gpsAcc"></label><span><input type="number" id="sGpsAcc" step="5" min="5" style="width:58px" inputmode="numeric"> <span class="hint">m</span></span></div>
         <div class="row"><label for="sMapType" data-i="mapType"></label><select id="sMapType"><option value="osm" data-i="mapOsm"></option><option value="vw" data-i="mapVw" disabled></option><option value="vwsat" data-i="mapVwSat" disabled></option></select></div>
         <div class="row"><label for="sMapScale" data-i="mapScale"></label><select id="sMapScale"><option value="fixed" data-i="fixed"></option><option value="auto" data-i="auto"></option></select></div>

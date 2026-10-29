@@ -4,7 +4,7 @@
  */
 (function () {
 'use strict';
-var APP_VERSION = '0.1.0';
+var APP_VERSION = '0.1.1';
 var t = QS.t;
 var $ = function (s, r) { return (r || document).querySelector(s); };
 var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
@@ -95,7 +95,7 @@ function onReading(r) {
   var prev = lastR();
   if (r.rate2 != null) { r.mrate = prev && prev.rate2 != null && r.t - prev.t < 5000 ? (r.rate2 + prev.rate2) / 2 : r.rate2; r.lag = 2000; }
   else { r.mrate = r.rate; r.lag = lagMs(r.avg); }
-  var fx = (S.useGps || A.src === 'demo') ? QS.Geo.at(r.t - r.lag, S.gpsAcc) : null;
+  var fx = (S.useGps || A.src === 'demo') ? QS.Geo.at(r.t - r.lag, 30000) : null;
   if (fx) { r.lat = fx.lat; r.lon = fx.lon; r.acc = fx.acc; } else r.lat = null;
   r.marker = A.pendingNote || ''; A.pendingNote = null;
   A.readings.push(r);
@@ -203,6 +203,36 @@ function renderBanner() {
 /* ===================== 측정 화면 ===================== */
 var lvKey = function (l) { return l === 2 ? 'danger' : l === 1 ? 'caution' : 'safe'; };
 var avgKey = function (a) { return a === 1 ? 'avg1' : a === 2 ? 'avg2' : 'avg0'; };
+function gpsState() {
+  if (A.src === 'demo') return 'ok';
+  if (!S.useGps) return 'off';
+  return QS.Geo.state;
+}
+function gpsShort() {
+  var st = gpsState(), me = QS.Geo.latest();
+  if (st === 'ok' && me) return t('gpsAcc2', { n: Math.round(me.acc) }) + (me.acc > S.gpsAcc ? ' · ' + t('gpsPoor') : '');
+  return t('gps_' + st);
+}
+function gpsTileHtml(r) {
+  var st = gpsState();
+  if (st === 'ok' && r && r.lat != null) return '<span class="' + (r.acc > S.gpsAcc ? 'poor' : '') + '">±' + Math.round(r.acc) + '<small>m</small></span>';
+  return '<small class="gpsbad">' + t('gpsT_' + st) + '</small>';
+}
+function showGpsHelp() {
+  var me = QS.Geo.latest(), st = gpsState();
+  var rows = [[t('gpsStateL'), t('gps_' + st)],
+    [t('gpsAccL'), me ? '±' + Math.round(me.acc) + ' m' + (me.acc > S.gpsAcc ? ' (' + t('gpsPoor') + ')' : '') : '—'],
+    [t('gpsAgeL'), me ? t('ago', { n: Math.max(0, Math.round((Date.now() - me.t) / 1000)) }) : '—']];
+  if (QS.Geo.err) rows.push([t('gpsErrL'), QS.Geo.err]);
+  openSheet('<div class="sh"><b>' + t('gpsHelpT') + '</b><button class="btn" id="shClose">' + t('close') + '</button></div>' +
+    '<dl class="kv">' + rows.map(function (a) { return '<dt>' + a[0] + '</dt><dd>' + esc(a[1]) + '</dd>'; }).join('') + '</dl>' +
+    '<ol class="steps" style="font-size:13px">' + ['gpsStep1', 'gpsStep2', 'gpsStep3', 'gpsStep4'].map(function (k) { return '<li>' + t(k) + '</li>'; }).join('') + '</ol>' +
+    (A.src === 'demo' ? '' : '<button class="btn primary" id="gpsRetry">' + t('gpsRetry') + '</button>'), function () {
+      $('#shClose').onclick = closeSheet;
+      var b = $('#gpsRetry');
+      if (b) b.onclick = function () { if (!S.useGps) { S.useGps = true; saveS(); } QS.Geo.restart(); closeSheet(); toast(t('gpsRetrying')); refresh(); };
+    });
+}
 function renderLive() {
   var r = lastR(), lv = r ? A.alarm.level : -1;
   $('#panel').dataset.lv = lv;
@@ -219,7 +249,7 @@ function renderLive() {
   $('#tSess').innerHTML = s ? f3(s.dose) + '<small>µSv</small>' : '-';
   $('#tDev').innerHTML = r ? (+r.dose).toFixed(2) + '<small>µSv</small>' : '-';
   $('#tTemp').innerHTML = r ? (+r.temp).toFixed(1) + '<small>°C</small>' : '-';
-  $('#tGps').innerHTML = r && r.lat != null ? '±' + Math.round(r.acc) + '<small>m</small>' : (QS.Geo.state === 'denied' && A.src !== 'demo' ? '<small>' + t('gpsDenied') + '</small>' : '—');
+  $('#tGps').innerHTML = gpsTileHtml(r);
   var br = $('#btnRec');
   br.className = 'btn ' + (A.recording ? 'recording' : 'primary');
   br.innerHTML = A.recording ? t('recOn') + ' <small>' + nf(A.session.n) + '</small>' : t('recStart');
@@ -295,7 +325,7 @@ function drawMapOverlay(c, P, w, h) {
     var screen = QS.css('--screen');
     if (M.grid) {
       var M_LON = M_LAT * Math.cos(pts[0].lat * Math.PI / 180), cells = {};
-      pts.forEach(function (p) { var k = Math.floor(p.lat * M_LAT / 10) + ',' + Math.floor(p.lon * M_LON / 10); (cells[k] = cells[k] || []).push(p.mrate); });
+      pts.forEach(function (p) { if (p.acc > S.gpsAcc) return; var k = Math.floor(p.lat * M_LAT / 10) + ',' + Math.floor(p.lon * M_LON / 10); (cells[k] = cells[k] || []).push(p.mrate); });
       c.globalAlpha = 0.85;
       Object.keys(cells).forEach(function (k) {
         var a = k.split(',').map(Number), v = cells[k].reduce(function (s, x) { return s + x; }, 0) / cells[k].length;
@@ -309,7 +339,9 @@ function drawMapOverlay(c, P, w, h) {
       for (var i = 0; i < pts.length; i += step) {
         var p = pts[i], s = P(p.lat, p.lon);
         if (s.x < -10 || s.y < -10 || s.x > w + 10 || s.y > h + 10) continue;
-        c.beginPath(); c.arc(s.x, s.y, rad, 0, 7); c.fillStyle = doseColor(p.mrate, lo, hi); c.fill(); c.lineWidth = 1; c.strokeStyle = screen; c.stroke();
+        c.beginPath(); c.arc(s.x, s.y, rad, 0, 7);
+        if (p.acc > S.gpsAcc) { c.lineWidth = 2; c.strokeStyle = doseColor(p.mrate, lo, hi); c.stroke(); }      // 정확도가 나쁜 위치 = 빈 원
+        else { c.fillStyle = doseColor(p.mrate, lo, hi); c.fill(); c.lineWidth = 1; c.strokeStyle = screen; c.stroke(); }
       }
     }
     if (M.sel) { var q = P(M.sel.lat, M.sel.lon); c.beginPath(); c.arc(q.x, q.y, 10, 0, 7); c.lineWidth = 2.2; c.strokeStyle = QS.css('--ink'); c.stroke(); }
@@ -350,7 +382,7 @@ function renderMap() {
   var r = A.viewSess ? null : lastR(), chips = '';
   if (A.viewSess) chips += '<span>' + t('viewing', { d: QS.ymd(A.viewSess.meta.start) + ' ' + QS.hm(A.viewSess.meta.start) }) + '</span>';
   else {
-    var gtxt = A.src === 'demo' || QS.Geo.state === 'ok' ? (me ? t('gpsAcc2', { n: Math.round(me.acc) }) : t('gpsNone')) : QS.Geo.state === 'denied' ? t('gpsDenied') : t('gpsNone');
+    var gtxt = gpsShort();
     chips += '<span class="num">' + gtxt + ' · ' + t('points', { n: nf(mapPoints().length) }) + '</span>';
     if (r) chips += '<span>' + (r.rate2 != null ? t('fromRate2') + ' · ' : '') + t('lag', { s: r.lag / 1000 }) + '</span>';
     if (r && r.avg > 0) chips += r.rate2 != null ? '<span>' + t('devAvgNote', { a: t(avgKey(r.avg)) }) + '</span>' : '<span class="warn">' + t('mapAvgWarn', { a: t(avgKey(r.avg)) }) + '</span>';
@@ -427,6 +459,7 @@ function renderSettings() {
   $('#demoGroup').hidden = A.src !== 'demo';
   $('#btnDisconnect').hidden = !A.connected;
   $('#appVer').textContent = APP_VERSION;
+  $('#gpsStateRo').textContent = gpsShort();
 }
 function bindSettings() {
   var num = function (id, key, lo, hi) { $(id).addEventListener('change', function (e) { var v = parseFloat(e.target.value); if (isFinite(v) && v >= lo && (hi == null || v <= hi)) { S[key] = v; saveS(); } else e.target.value = S[key]; refresh(); }); };
@@ -439,6 +472,7 @@ function bindSettings() {
   $('#sMapScale').addEventListener('change', function (e) { S.mapScale = e.target.value; saveS(); });
   $('#sLang').addEventListener('change', function (e) { setLang(e.target.value); });
   $('#btnTestSound').onclick = function () { QS.Snd.unlock(); setTimeout(function () { QS.Snd.play('caution'); }, 60); };
+  $('#btnGpsHelp').onclick = showGpsHelp;
   $('#btnRaw').onclick = function () {
     openSheet('<div class="sh"><b>' + t('rawT') + '</b><button class="btn" id="shClose">' + t('close') + '</button></div><pre>' + esc(A.raw.slice(-40).join('\n') || '—') + '</pre>', function () { $('#shClose').onclick = closeSheet; });
   };
@@ -567,6 +601,8 @@ $$('[data-x]').forEach(function (b) { b.onclick = function () { exportSession(b.
 $$('#rangeSeg button').forEach(function (b) { b.onclick = function () { A.trendRange = +b.dataset.r; renderTrend(); }; });
 $('#btnRec').onclick = function () { if (A.recording) stopRecording(); else startRecording(); refresh(); };
 $('#btnNote').onclick = showNote;
+$('#gpsTile').onclick = showGpsHelp;
+QS.Geo.onChange = function () { if (A.connected) refresh(); };
 $('#btnGoMap').onclick = function () { show('map'); };
 $('#btnConnect').onclick = function () { connectBle(false); };
 $('#btnConnectAll').onclick = function () { connectBle(true); };
