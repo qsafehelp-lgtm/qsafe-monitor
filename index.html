@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Q-Safe Monitor</title>
+<meta name="description" content="QSF104 방사능 측정기 휴대폰 모니터 (블루투스)">
+<meta name="theme-color" content="#1b2340">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Q-Safe">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&family=IBM+Plex+Sans+KR:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+<div class="app" id="app">
+  <header class="topbar" id="topbar"></header>
+  <div class="banner" id="banner" hidden></div>
+  <main class="views" id="views">
+
+    <!-- 연결 -->
+    <section class="view" data-view="connect" hidden>
+      <div class="hero">
+        <h2 data-i="cTitle"></h2>
+        <ol class="steps"><li data-i="cStep1"></li><li data-i="cStep2"></li></ol>
+      </div>
+      <button class="bigbtn" id="btnConnect" data-i="cConnect"></button>
+      <button class="textbtn" id="btnConnectAll" data-i="cAll"></button>
+      <div class="msg" id="connectMsg" hidden></div>
+      <button class="ghost" id="btnDemo" data-i="cDemo"></button>
+      <button class="ghost" id="btnOpenLogs" data-i="cLog"></button>
+      <div class="card" id="iphoneCard">
+        <div class="cardhead"><b data-i="cIphoneT"></b></div>
+        <div class="hint" data-i="cIphone"></div>
+        <div style="margin-top:6px"><a href="https://apps.apple.com/app/id1492822055" target="_blank" rel="noopener" data-i="cIphoneLink"></a></div>
+      </div>
+    </section>
+
+    <!-- 측정 -->
+    <section class="view" data-view="live" hidden>
+      <div class="panel" id="panel" data-lv="-1">
+        <div class="prow"><span class="pill" id="lvPill"></span><span class="thr" id="thrText"></span></div>
+        <div class="big"><span class="v" id="rateV">-.---</span><span class="u">µSv/h</span></div>
+        <div class="sub"><span><b id="errV">±-</b> %</span><span id="avgV"></span><span id="devAlarmV"></span></div>
+      </div>
+      <div class="tiles">
+        <div class="tile"><span>CPM</span><b id="tCpm">-</b></div>
+        <div class="tile"><span data-i="sessMax"></span><b id="tMax">-</b></div>
+        <div class="tile"><span data-i="sessDose"></span><b id="tSess">-</b></div>
+        <div class="tile"><span data-i="devDose"></span><b id="tDev">-</b></div>
+        <div class="tile"><span data-i="temp"></span><b id="tTemp">-</b></div>
+        <div class="tile"><span>GPS</span><b id="tGps">—</b></div>
+      </div>
+      <div class="card">
+        <div class="cardhead"><span data-i="last2m"></span><span id="sparkMax" class="num"></span></div>
+        <canvas class="spark" id="spark"></canvas>
+      </div>
+      <div class="actions">
+        <button class="btn" id="btnRec"></button>
+        <button class="btn" id="btnNote" data-i="note"></button>
+        <button class="btn" id="btnGoMap" data-i="tabMap"></button>
+      </div>
+      <div class="hint" data-i="liveHint"></div>
+    </section>
+
+    <!-- 그래프 -->
+    <section class="view" data-view="trend" hidden>
+      <div class="viewing" id="viewingT" hidden></div>
+      <div class="seg" id="rangeSeg">
+        <button data-r="120" data-i="r2m"></button><button data-r="600" data-i="r10m"></button><button data-r="3600" data-i="r1h"></button><button data-r="0" data-i="rAll"></button>
+      </div>
+      <div class="card"><canvas class="chart" id="chart"></canvas>
+        <div class="legendrow"><span><i style="border-color:var(--caution)"></i><span data-i="caution"></span></span><span><i style="border-color:var(--danger)"></i><span data-i="danger"></span></span><span data-i="evMarks"></span></div>
+      </div>
+      <div class="stats" id="stats"></div>
+      <div class="hint" id="annual"></div>
+    </section>
+
+    <!-- 지도 -->
+    <section class="view mapview" data-view="map" hidden>
+      <div class="mapwrap">
+        <canvas id="map"></canvas>
+        <div class="chips" id="mapChips"></div>
+        <div class="mapctl">
+          <button id="mFollow" aria-pressed="true" aria-label="follow"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg></button>
+          <button id="mFit" aria-label="fit"><svg viewBox="0 0 24 24"><path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/></svg></button>
+          <button id="mGrid" aria-pressed="false" aria-label="grid"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M4 12h16M12 4v16"/></svg></button>
+          <button id="mIn" aria-label="zoom in">+</button>
+          <button id="mOut" aria-label="zoom out">−</button>
+        </div>
+        <div class="mapmsg" id="mapMsg" hidden></div>
+        <div class="maplegend" id="mapLegend"></div>
+        <div class="mapinfo" id="mapInfo"></div>
+        <div class="attrib">© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors</div>
+      </div>
+    </section>
+
+    <!-- 기록 -->
+    <section class="view" data-view="log" hidden>
+      <h2 class="vt" data-i="sessions"></h2>
+      <div class="slist" id="slist"></div>
+      <div class="note" id="logNote" data-i="logNote"></div>
+    </section>
+
+    <!-- 기록 상세 -->
+    <section class="view" data-view="session" hidden>
+      <button class="back" data-back="log">‹ <span data-i="sessions"></span></button>
+      <h2 class="vt" id="sTitle"></h2>
+      <div class="card"><dl class="kv" id="sKv"></dl></div>
+      <div class="actions" style="grid-template-columns:1fr 1fr">
+        <button class="btn" id="sTrend" data-i="viewTrend"></button><button class="btn" id="sMap" data-i="viewMap"></button>
+      </div>
+      <div class="ngroup"><h3 class="hint" style="margin:4px 4px 6px" data-i="export"></h3>
+        <div class="exp"><button class="btn" data-x="csv">CSV</button><button class="btn" data-x="gpx">GPX</button><button class="btn" data-x="kml">KML</button><button class="btn" data-x="geojson">GeoJSON</button></div>
+      </div>
+      <div class="note" data-i="exportNote"></div>
+      <button class="ghost btn warn" id="sDelete" data-i="deleteSession"></button>
+    </section>
+
+    <!-- 설정 -->
+    <section class="view" data-view="settings" hidden>
+      <button class="back" data-back="prev">‹ <span data-i="back"></span></button>
+      <div class="group">
+        <h3 data-i="gAlarm"></h3>
+        <div class="row"><label for="sCaution" data-i="caution"></label><span><input type="number" id="sCaution" step="0.05" min="0.01" inputmode="decimal"> <span class="hint">µSv/h</span></span></div>
+        <div class="row"><label for="sDanger" data-i="danger"></label><span><input type="number" id="sDanger" step="0.1" min="0.01" inputmode="decimal"> <span class="hint">µSv/h</span></span></div>
+        <div class="row"><label for="sRise" data-i="rise"></label><span style="display:flex;gap:8px;align-items:center"><input type="number" id="sRiseSigma" step="0.5" min="2" max="10" style="width:58px" inputmode="decimal"> <span class="hint">σ</span><input type="checkbox" class="sw" id="sRise"></span></div>
+        <div class="row"><label for="sLoss" data-i="loss"></label><input type="checkbox" class="sw" id="sLoss"></div>
+        <div class="row"><label for="sSessOn" data-i="sessLimit"></label><span style="display:flex;gap:8px;align-items:center"><input type="number" id="sSessLimit" step="0.1" min="0.1" style="width:64px" inputmode="decimal"> <span class="hint">µSv</span><input type="checkbox" class="sw" id="sSessOn"></span></div>
+        <div class="row"><label for="sSound" data-i="sound"></label><span style="display:flex;gap:10px;align-items:center"><button class="linkbtn" id="btnTestSound" data-i="testSound"></button><input type="checkbox" class="sw" id="sSound"></span></div>
+        <div class="row"><label for="sVibrate" data-i="vibrate"></label><input type="checkbox" class="sw" id="sVibrate"></div>
+        <div class="row"><label for="sFlash" data-i="flash"></label><input type="checkbox" class="sw" id="sFlash"></div>
+      </div>
+      <div class="note" data-i="alarmNote"></div>
+      <div class="group">
+        <h3 data-i="gGeneral"></h3>
+        <div class="row"><label for="sLang" data-i="language"></label><select id="sLang"><option value="ko">한국어</option><option value="en">English</option></select></div>
+        <div class="row"><label for="sAutoRec" data-i="autoRec"></label><input type="checkbox" class="sw" id="sAutoRec"></div>
+        <div class="row"><label for="sWake" data-i="wake"></label><input type="checkbox" class="sw" id="sWake"></div>
+        <div class="row"><label for="sUseGps" data-i="useGps"></label><input type="checkbox" class="sw" id="sUseGps"></div>
+        <div class="row"><label for="sGpsAcc" data-i="gpsAcc"></label><span><input type="number" id="sGpsAcc" step="5" min="5" style="width:58px" inputmode="numeric"> <span class="hint">m</span></span></div>
+        <div class="row"><label for="sMapType" data-i="mapType"></label><select id="sMapType"><option value="osm" data-i="mapOsm"></option><option value="vw" data-i="mapVw" disabled></option><option value="vwsat" data-i="mapVwSat" disabled></option></select></div>
+        <div class="row"><label for="sMapScale" data-i="mapScale"></label><select id="sMapScale"><option value="fixed" data-i="fixed"></option><option value="auto" data-i="auto"></option></select></div>
+      </div>
+      <div class="group" id="demoGroup" hidden>
+        <h3 data-i="gDemo"></h3>
+        <div class="row" style="flex-wrap:wrap;justify-content:flex-start;gap:6px" id="demoScen">
+          <button class="btn" data-sc="normal" data-i="scNormal"></button><button class="btn" data-sc="caution" data-i="scCaution"></button><button class="btn" data-sc="danger" data-i="scDanger"></button><button class="btn" data-sc="lost" data-i="scLost"></button><button class="btn" data-sc="avg20" data-i="scAvg20"></button>
+        </div>
+      </div>
+      <div class="group">
+        <h3 data-i="gDevice"></h3>
+        <div class="row"><span data-i="model"></span><span class="ro" id="dModel"></span></div>
+        <div class="row"><span data-i="serial"></span><span class="ro" id="dSerial"></span></div>
+        <div class="row"><span data-i="fw"></span><span class="ro" id="dFw"></span></div>
+        <div class="row"><span data-i="devAlarmLv"></span><span class="ro" id="dAlarm"></span></div>
+        <div class="row"><span data-i="btName"></span><span class="ro" id="dBt"></span></div>
+        <div class="row"><button class="linkbtn" id="btnRaw" data-i="rawLog"></button></div>
+      </div>
+      <div class="note" data-i="readonly"></div>
+      <button class="ghost" id="btnDisconnect" data-i="disconnect"></button>
+      <div class="note"><span data-i="version"></span> <span id="appVer"></span></div>
+    </section>
+  </main>
+
+  <nav class="tabbar" id="tabbar" hidden>
+    <button data-tab="live"><svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 13l4-4M12 3v2"/></svg><span data-i="tabLive"></span></button>
+    <button data-tab="trend"><svg viewBox="0 0 24 24"><path d="M3 19h18M4 15l4-5 4 3 4-7 4 5"/></svg><span data-i="tabTrend"></span></button>
+    <button data-tab="map"><svg viewBox="0 0 24 24"><path d="M9 4L3 6v14l6-2 6 2 6-2V4l-6 2-6-2zM9 4v14M15 6v14"/></svg><span data-i="tabMap"></span></button>
+    <button data-tab="log"><svg viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h4"/></svg><span data-i="tabLog"></span></button>
+  </nav>
+  <div class="sheetbg" id="sheetbg" hidden><div class="sheet" id="sheet"></div></div>
+  <div class="toast" id="toast" hidden></div>
+</div>
+
+<script src="js/i18n.js"></script>
+<script src="js/protocol.js"></script>
+<script src="js/store.js"></script>
+<script src="js/ble.js"></script>
+<script src="js/geo.js"></script>
+<script src="js/demo.js"></script>
+<script src="js/sound.js"></script>
+<script src="js/chart.js"></script>
+<script src="js/tilemap.js"></script>
+<script src="js/export.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
