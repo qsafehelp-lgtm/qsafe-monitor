@@ -14,7 +14,7 @@ QSF104 시리즈(FW V7.8 이상) 방사능 측정기를 휴대폰과 블루투�
 2. 오른쪽 위 **+** → **New repository** → 이름 `qsafe-monitor`, **Public** 선택 → **Create repository**.
    (무료 GitHub Pages 는 공개 저장소에서만 됩니다. 이 앱에는 비밀번호·키 같은 비밀 정보가 없습니다.)
 3. 저장소 화면에서 **uploading an existing file** (또는 **Add file → Upload files**) 를 누르고,
-   이 폴더 안의 내용(`index.html`, `css`, `js`, `icons`, `sw.js`, `manifest.webmanifest`, `README.md`)을 **폴더째** 끌어다 놓은 뒤 **Commit changes**.
+   이 폴더 안의 파일 20개를 모두 끌어다 놓은 뒤 **Commit changes**. (모든 파일이 저장소 맨 위에 나란히 있어야 합니다.)
 4. **Settings → Pages** → Build and deployment 의 Source 를 **Deploy from a branch**, Branch 를 **main / (root)** 로 하고 **Save**.
 5. 1~2분 뒤 같은 화면 위쪽에 주소가 나옵니다 : `https://계정이름.github.io/qsafe-monitor/`
 
@@ -53,19 +53,19 @@ QSF104 시리즈(FW V7.8 이상) 방사능 측정기를 휴대폰과 블루투�
 
 | 파일 | 하는 일 |
 | --- | --- |
-| `index.html`, `css/app.css` | 화면 |
-| `js/protocol.js` | 20바이트 조각을 줄로 조립, `$QSF` / `$QSFI` 해석 |
-| `js/ble.js` | Web Bluetooth 연결 (서비스 FFE0, 특성 FFE1 알림), 자동 재연결 |
-| `js/geo.js` | 휴대폰 GPS |
-| `js/store.js` | 기록 저장 (IndexedDB) |
-| `js/app.js` | 화면 동작, 웹 알람, 기록 |
-| `js/chart.js` | 그래프 |
-| `js/tilemap.js` | OpenStreetMap 지도 (외부 라이브러리 없음) |
-| `js/export.js` | CSV · GPX · KML · GeoJSON |
-| `js/sound.js` | 경보음 · 진동 |
-| `js/demo.js` | 체험 모드 (가상 기기) |
-| `js/i18n.js` | 한국어 / English 문구 |
-| `sw.js`, `manifest.webmanifest`, `icons/` | 홈 화면 설치·오프라인 |
+| `index.html`, `app.css` | 화면 |
+| `protocol.js` | 20바이트 조각을 줄로 조립, `$QSF` / `$QSFI` 해석 |
+| `ble.js` | Web Bluetooth 연결 (서비스 FFE0, 특성 FFE1 알림), 자동 재연결 |
+| `geo.js` | 휴대폰 GPS |
+| `store.js` | 기록 저장 (IndexedDB) |
+| `app.js` | 화면 동작, 웹 알람, 기록 |
+| `chart.js` | 그래프 |
+| `tilemap.js` | OpenStreetMap 지도 (외부 라이브러리 없음) |
+| `export.js` | CSV · GPX · KML · GeoJSON |
+| `sound.js` | 경보음 · 진동 |
+| `demo.js` | 체험 모드 (가상 기기) |
+| `i18n.js` | 한국어 / English 문구 |
+| `sw.js`, `manifest.webmanifest`, `icon-*.png`, `apple-touch-icon.png` | 홈 화면 설치·오프라인 |
 
 CSV 열 : `time,device,rate_uSv_h,cpm,err_pct,alarm,dose_uSv,battery,temp_c,marker,battery_mV,lat,lon,gps_acc_m,rate_2s_uSv_h`
 (앞 11개 열은 PC 용 QSF104 모니터와 같습니다.)

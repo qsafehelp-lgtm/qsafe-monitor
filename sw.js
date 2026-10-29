@@ -2,12 +2,12 @@
  *  파일을 고쳐 올릴 때는 아래 VERSION 을 올릴 것 (그래야 휴대폰이 새 파일을 받음).
  *  지도 타일(OpenStreetMap)은 여기서 저장하지 않고 브라우저 캐시에 맡긴다 (OSM 사용 조건).
  */
-var VERSION = 'qsm-0.1.0';
+var VERSION = 'qsm-0.1.0f';
 var FILES = [
-  './', 'index.html', 'manifest.webmanifest', 'css/app.css',
-  'js/i18n.js', 'js/protocol.js', 'js/store.js', 'js/ble.js', 'js/geo.js', 'js/demo.js', 'js/sound.js',
-  'js/chart.js', 'js/tilemap.js', 'js/export.js', 'js/app.js',
-  'icons/icon-192.png', 'icons/icon-512.png', 'icons/icon-maskable-512.png', 'icons/apple-touch-icon.png'
+  './', 'index.html', 'manifest.webmanifest', 'app.css',
+  'i18n.js', 'protocol.js', 'store.js', 'ble.js', 'geo.js', 'demo.js', 'sound.js',
+  'chart.js', 'tilemap.js', 'export.js', 'app.js',
+  'icon-192.png', 'icon-512.png', 'icon-maskable-512.png', 'apple-touch-icon.png'
 ];
 
 self.addEventListener('install', function (e) {
